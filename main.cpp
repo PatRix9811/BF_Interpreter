@@ -5,23 +5,51 @@
 #include <iostream>
 #include <fstream>
 
-void loop(char data,char *p)
+
+void loop(char *data,char *p,int len,bool main_lp,int pos)
 {
-	char *loop_data = NULL;
-	bool in_loop = false;
-	bool data_from_loop = false;
-		switch (data)
+	for (int i = pos; i < len; i++)
+	{
+		
+		switch (data[i])
 		{
-		case '>': { if (data_from_loop == in_loop)++p; break; }
-		case '<': { if (data_from_loop == in_loop)--p; break; }
-		case '+': { if (data_from_loop == in_loop){++(*p);} break;}
-		case '-': { if (data_from_loop == in_loop)--(*p); break; }
-		case '.': { if (data_from_loop == in_loop)putchar(*p); break; }
-		case ',': { if (data_from_loop == in_loop)*p = getchar(); break; }
-		case '[': { if (*p == 0) { data_from_loop = true; in_loop = false; } else { data_from_loop = true; in_loop = true; } break; }
-		case ']': {if (in_loop) { } break; }
+		case '>': { ++p;  break; }
+		case '<': {--p;  break; }
+		case '+': { ++(*p); break; }
+		case '-': { --(*p); break; }
+		case '.': { putchar(*p); break; }
+		case ',': { *p = getchar(); break; }
+		case '[': 
+		{
+			if (*p == 0)
+			{
+				int loop_beg=1;
+				do
+				{
+					i++;
+					if (data[i] == '[')loop_beg++;
+					if (data[i] == ']')loop_beg--;
+				} while (loop_beg != 0);
+
+				break;
+			}
+			break;
+		}
+		case ']': 
+		{
+			int loop_beg = 1;
+			do
+			{
+				i--;
+				if (data[i] == '[')loop_beg--;
+				if (data[i] == ']')loop_beg++;
+			} while (loop_beg != 0);
+			i--;
+			break;
+		}
 		default:break;
 		}
+	}
 
 	return;
 }
@@ -46,14 +74,18 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	char pointer_table[30000] = { 0 };
+	f.seekg(0,f.end);
+	int length = f.tellp();
+	f.seekg(0,f.beg);
 
-	char *p=pointer_table;
-	char *data=new char;
-	while (!f.read(data,1).eof())
-	{
-		loop(*data, p);
-	}
+	char pointer_table[30000] = { 0 };
+	char *p = pointer_table;
+	char *data = new char[length];
+
+	f.read(data, length);
+	f.close();
+
+	loop(data, p, length,true,0);
 
 	return 0;
 }
